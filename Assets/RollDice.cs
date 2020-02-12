@@ -6,9 +6,12 @@ public class RollDice : MonoBehaviour
 {
     Rigidbody body;
     float force;
+    bool dragging;
 
     public float PerSecondTorque = 1;
     public float PerSecondSpeed = 1;
+    public float PullForce = 10;
+    public float Damping = 0.95f;
 
     // Start is called before the first frame update
     void Start()
@@ -21,6 +24,34 @@ public class RollDice : MonoBehaviour
     {
         float d = Time.deltaTime;
         float t = d * this.PerSecondTorque;
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            this.body.useGravity = false;
+        }
+        else if (Input.GetMouseButtonUp(0))
+        {
+            this.body.useGravity = true;
+        }
+        else if (Input.GetMouseButton(0))
+        {
+            var mousePos = Input.mousePosition;
+            var ray = Camera.main.ScreenPointToRay(mousePos);
+
+            float enter;
+
+            if (new Plane(Vector3.up, -4).Raycast(ray, out enter))
+            {
+                var point = ray.GetPoint(enter);
+                var dir = point - this.transform.position;
+
+                this.body.AddForce(dir * this.PullForce);
+                this.body.AddTorque(t, t, t);
+                this.body.velocity *= this.Damping;
+            }
+
+            return;
+        }
 
         if (Input.GetKeyDown(KeyCode.Space))
         {
